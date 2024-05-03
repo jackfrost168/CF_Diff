@@ -109,7 +109,7 @@ class GaussianDiffusion(nn.Module):
 
         for i in indices:
             t = th.tensor([i] * x_t.shape[0]).to(x_start.device)
-            out = self.p_mean_variance(model, x_t, x_sec_hop, x_start, t)
+            out = self.p_mean_variance(model, x_t, x_sec_hop, t)
             if sampling_noise:
                 noise = th.randn_like(x_t)
                 nonzero_mask = (
@@ -130,7 +130,7 @@ class GaussianDiffusion(nn.Module):
             x_t = x_start
 
         terms = {}
-        model_output = model(x_t, x_sec_hop, x_start, ts)
+        model_output = model(x_t, x_sec_hop, ts)
         target = {
             ModelMeanType.START_X: x_start,
             ModelMeanType.EPSILON: noise,
@@ -236,14 +236,14 @@ class GaussianDiffusion(nn.Module):
         )
         return posterior_mean, posterior_variance, posterior_log_variance_clipped
     
-    def p_mean_variance(self, model, x, x_sec_hop, x_start, t):
+    def p_mean_variance(self, model, x, x_sec_hop, t):
         """
         Apply the model to get p(x_{t-1} | x_t), as well as a prediction of
         the initial x, x_0.
         """
         B, C = x.shape[:2]
         assert t.shape == (B, )
-        model_output = model(x, x_sec_hop, x_start, t)
+        model_output = model(x, x_sec_hop, t)
 
         model_variance = self.posterior_variance
         model_log_variance = self.posterior_log_variance_clipped
