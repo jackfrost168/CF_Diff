@@ -4,7 +4,7 @@ This is the pytorch implementation of our paper at SIGIR 2024:
 > 
 > Hou, Yu and Park, Jin-Duk and Shin, Won-Yong
 
-The implementation of diffusion model part is referred to [DiffRec](https://github.com/YiyanXu/DiffRec/tree/main).
+The implementation of diffusion model part is referred to [DiffRec](https://github.com/YiyanXu/DiffRec/tree/main). Thank you for this contribution.
 ## Environment
 - Anaconda 3
 - python 3.8.17
