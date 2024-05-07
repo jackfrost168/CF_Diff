@@ -17,7 +17,7 @@ The implementation of diffusion model part is referred to [DiffRec](https://gith
 The user-item interaction data is in './datasets' folder. The file of sec_hop_inters_ML_1M.pt contains the information of second-hop user-item interactions.
 
 ### Training
-#### CF_Diff
+#### CF-Diff
 ```
 cd ./CF_Diff
 python main.py
