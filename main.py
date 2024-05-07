@@ -11,23 +11,28 @@ import torch.backends.cudnn as cudnn
 import models.gaussian_diffusion as gd
 
 from models.CAM_AE import CAM_AE
-#from models.CAM_AE_multihop import CAM_AE
+from models.CAM_AE_multihops import CAM_AE_multihops
 
 import evaluate_utils
 import data_utils
 import random
 
 random_seed = 1
-torch.manual_seed(random_seed) # cpu
-torch.cuda.manual_seed(random_seed) # gpu
-np.random.seed(random_seed) # numpy
-random.seed(random_seed) # random and transforms
-torch.backends.cudnn.deterministic=True # cudnn
+torch.manual_seed(random_seed)  # cpu
+torch.cuda.manual_seed(random_seed)  # gpu
+np.random.seed(random_seed)  # numpy
+random.seed(random_seed)  # random and transforms
+torch.backends.cudnn.deterministic = True  # cudnn
+
+
 def worker_init_fn(worker_id):
     np.random.seed(random_seed + worker_id)
+
+
 def seed_worker(worker_id):
-    worker_seed = torch.initial_seed() % 2**32
+    worker_seed = torch.initial_seed() % 2 ** 32
     np.random.seed(worker_seed)
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', type=str, default='ML-1M', help='choose the dataset')
@@ -68,8 +73,7 @@ print("args:", args)
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("device:", device)
-
-print("Starting time: ", time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
+print("Starting time: ", time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
 
 ### DATA LOAD ###
 data_name = 'ML-1M'
@@ -77,14 +81,23 @@ train_path = args.data_path + 'train_list_' + args.dataset + '.npy'
 valid_path = args.data_path + 'valid_list_' + args.dataset + '.npy'
 test_path = args.data_path + 'test_list_' + args.dataset + '.npy'
 
+n_hop = 3  # The number of hops neighbors, e.g. n_hop=3 means three hops neighbors are taken into account
+print("{}-hop neighbors are taken into account".format(n_hop))
+if n_hop == 2:
+    sec_hop = torch.load(args.data_path + 'sec_hop_inters_ML_1M.pt')
+    multi_hop = sec_hop
+elif n_hop == 3:
+    multi_hop = torch.load(args.data_path + 'multi_hop_inters_ML_1M.pt')
+
 train_data, valid_y_data, test_y_data, n_user, n_item = data_utils.data_load(train_path, valid_path, test_path)
 train_dataset = data_utils.DataDiffusion(torch.FloatTensor(train_data.A))
-train_loader = DataLoader(train_dataset, batch_size=args.batch_size, pin_memory=True, shuffle=False, num_workers=0, worker_init_fn=worker_init_fn)
+train_loader = DataLoader(train_dataset, batch_size=args.batch_size, pin_memory=True, shuffle=False, num_workers=0,
+                          worker_init_fn=worker_init_fn)
 test_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=False)
 
-sec_hop = torch.load(args.data_path + 'sec_hop_inters_ML_1M.pt')
-train_loader_sec_hop = DataLoader(sec_hop, batch_size=args.batch_size, pin_memory=True, shuffle=False, num_workers=0, worker_init_fn=worker_init_fn)
-test_loader_sec_hop = DataLoader(sec_hop, batch_size=args.batch_size, shuffle=False)
+train_loader_sec_hop = DataLoader(multi_hop, batch_size=args.batch_size, pin_memory=True, shuffle=False, num_workers=0,
+                                  worker_init_fn=worker_init_fn)
+test_loader_sec_hop = DataLoader(multi_hop, batch_size=args.batch_size, shuffle=False)
 
 if args.tst_w_val:
     tv_dataset = data_utils.DataDiffusion(torch.FloatTensor(train_data.A) + torch.FloatTensor(valid_y_data.A))
@@ -102,10 +115,13 @@ else:
     raise ValueError("Unimplemented mean type %s" % args.mean_type)
 
 diffusion = gd.GaussianDiffusion(mean_type, args.noise_schedule, \
-        args.noise_scale, args.noise_min, args.noise_max, args.steps, device).to(device)
+                                 args.noise_scale, args.noise_min, args.noise_max, args.steps, device).to(device)
 
 # Build model
-model = CAM_AE(16, 2, 2, n_item, args.emb_size).to(device)
+if n_hop == 2:
+    model = CAM_AE(16, 2, 2, n_item, args.emb_size).to(device)
+elif n_hop == 3:
+    model = CAM_AE_multihops(16, 4, 2, n_item, args.emb_size).to(device)
 optimizer = optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 print("models are ready.")
 
@@ -119,10 +135,10 @@ def evaluate(data_loader, data_loader_sec_hop, data_te, mask_his, topN):
     target_items = []
     for i in range(e_N):
         target_items.append(data_te[i, :].nonzero()[1].tolist())
-    
+
     with torch.no_grad():
         for (batch_idx, batch), (batch_idx_2, batch_2) in zip(enumerate(data_loader), enumerate(data_loader_sec_hop)):
-            his_data = mask_his[e_idxlist[batch_idx*args.batch_size:batch_idx*args.batch_size+len(batch)]]
+            his_data = mask_his[e_idxlist[batch_idx * args.batch_size:batch_idx * args.batch_size + len(batch)]]
             batch = batch.to(device)
             batch_2 = batch_2.to(device)
             prediction = diffusion.p_sample(model, batch, batch_2, args.sampling_steps, args.sampling_noise)
@@ -143,7 +159,7 @@ if __name__ == '__main__':
     print("Start training...")
     for epoch in range(1, args.epochs + 1):
         if epoch - best_epoch >= 20:
-            print('-'*18)
+            print('-' * 18)
             print('Exiting from training early')
             break
 
@@ -172,22 +188,25 @@ if __name__ == '__main__':
                 test_results = evaluate(test_loader, test_loader_sec_hop, test_y_data, mask_tv, eval(args.topN))
             evaluate_utils.print_results(None, valid_results, test_results)
 
-            if valid_results[1][1] > best_recall: # recall@20 as selection
+            if valid_results[1][1] > best_recall:  # recall@20 as selection
                 best_recall, best_epoch = valid_results[1][1], epoch
                 best_results = valid_results
                 best_test_results = test_results
 
                 if not os.path.exists(args.save_path):
                     os.makedirs(args.save_path)
-                torch.save(model, '{}{}_lr{}_wd{}_bs{}_dims{}_emb{}_{}_steps{}_scale{}_min{}_max{}_sample{}_reweight{}_{}.pth' \
-                    .format(args.save_path, args.dataset, args.lr, args.weight_decay, args.batch_size, args.dims, args.emb_size, args.mean_type, \
-                    args.steps, args.noise_scale, args.noise_min, args.noise_max, args.sampling_steps, args.reweight, args.log_name))
+                torch.save(model,
+                           '{}{}_lr{}_wd{}_bs{}_dims{}_emb{}_{}_steps{}_scale{}_min{}_max{}_sample{}_reweight{}_{}.pth' \
+                           .format(args.save_path, args.dataset, args.lr, args.weight_decay, args.batch_size, args.dims,
+                                   args.emb_size, args.mean_type, \
+                                   args.steps, args.noise_scale, args.noise_min, args.noise_max, args.sampling_steps,
+                                   args.reweight, args.log_name))
 
         print("Runing Epoch {:03d} ".format(epoch) + 'train loss {:.4f}'.format(total_loss) + " costs " + time.strftime(
-                            "%H: %M: %S", time.gmtime(time.time()-start_time)))
-        print('---'*18)
+            "%H: %M: %S", time.gmtime(time.time() - start_time)))
+        print('---' * 18)
 
-    print('==='*18)
+    print('===' * 18)
     print("End. Best Epoch {:03d} ".format(best_epoch))
     evaluate_utils.print_results(None, best_results, best_test_results)
-    print("End time: ", time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
+    print("End time: ", time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
