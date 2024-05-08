@@ -7,6 +7,7 @@ import math
 class CAM_AE(nn.Module):
     """
     CAM-AE: The neural network architecture for learning the data distribution in the reverse diffusion process.
+    First-hop neighbors (direct neighbors) is to be integrated.
     """
 
     def __init__(self, d_model, num_heads, num_layers, in_dims, emb_size, time_type="cat", norm=False, dropout=0.5):
