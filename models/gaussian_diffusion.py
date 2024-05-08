@@ -5,9 +5,11 @@ import torch as th
 import torch.nn.functional as F
 import torch.nn as nn
 
+
 class ModelMeanType(enum.Enum):
     START_X = enum.auto()  # the model predicts x_0
     EPSILON = enum.auto()  # the model predicts epsilon
+
 
 class GaussianDiffusion(nn.Module):
     def __init__(self, mean_type, noise_schedule, noise_scale, noise_min, noise_max,\
@@ -37,7 +39,7 @@ class GaussianDiffusion(nn.Module):
             self.calculate_for_diffusion()
 
         super(GaussianDiffusion, self).__init__()
-    
+
     def get_betas(self):
         """
         Given the schedule name, create the betas for the diffusion process.
@@ -271,7 +273,6 @@ class GaussianDiffusion(nn.Module):
             "pred_xstart": pred_xstart,
         }
 
-    
     def _predict_xstart_from_eps(self, x_t, t, eps):
         assert x_t.shape == eps.shape
         return (
@@ -285,7 +286,7 @@ class GaussianDiffusion(nn.Module):
         """
         self.alphas_cumprod = self.alphas_cumprod.to(t.device)
         return self.alphas_cumprod[t] / (1 - self.alphas_cumprod[t])
-    
+
     def _extract_into_tensor(self, arr, timesteps, broadcast_shape):
         """
         Extract values from a 1-D numpy array for a batch of indices.
