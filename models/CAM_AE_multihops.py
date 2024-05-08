@@ -9,7 +9,6 @@ class CAM_AE_multihops(nn.Module):
     CAM-AE_multihops: The neural network architecture for learning the data distribution in the reverse diffusion process.
     Multi-hop neighbors are to be integrated.
     """
-
     def __init__(self, d_model, num_heads, num_layers, in_dims, emb_size, time_type="cat", norm=False, dropout=0.5):
         super(CAM_AE_multihops, self).__init__()
         self.in_dims = in_dims
@@ -17,14 +16,11 @@ class CAM_AE_multihops(nn.Module):
         self.time_emb_dim = emb_size
         self.norm = norm
         self.num_layers = num_layers
-
         self.emb_layer = nn.Linear(self.time_emb_dim, self.time_emb_dim)
-
         self.in_layers = nn.ModuleList([nn.Linear(d_in, d_out) \
                                         for d_in, d_out in zip([d_model,d_model], [d_model,d_model])])
         self.out_layers = nn.ModuleList([nn.Linear(d_in, d_out) \
                                          for d_in, d_out in zip([d_model,d_model], [d_model,d_model])])
-
         self.forward_layers = nn.ModuleList([nn.Linear(d_model, d_model) \
                                          for i in range(num_layers)])
 
@@ -52,7 +48,6 @@ class CAM_AE_multihops(nn.Module):
         self.d_model = d_model
         self.norm1 = nn.LayerNorm(d_model)
         self.norm2 = nn.LayerNorm(d_model)
-
 
     def forward(self, x, x_sec_hop, timesteps):
 
@@ -94,7 +89,6 @@ class CAM_AE_multihops(nn.Module):
             if i != self.num_layers - 1:
                 h = torch.tanh(h)
 
-
         for i in range(self.num_layers):
 
             attention_layer = self.self_attentions[i]
@@ -120,7 +114,6 @@ class CAM_AE_multihops(nn.Module):
 
         return h
 
-
 def timestep_embedding(timesteps, dim, max_period=10000):
     """
     Create sinusoidal timestep embeddings.
@@ -131,7 +124,6 @@ def timestep_embedding(timesteps, dim, max_period=10000):
     :param max_period: controls the minimum frequency of the embeddings.
     :return: an [N x dim] Tensor of positional embeddings.
     """
-
     half = dim // 2
     freqs = torch.exp(
         -math.log(max_period) * torch.arange(start=0, end=half, dtype=torch.float32) / half
