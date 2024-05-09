@@ -51,7 +51,6 @@ parser.add_argument('--round', type=int, default=1, help='record the experiment'
 
 # params for the model
 parser.add_argument('--time_type', type=str, default='cat', help='cat or add')
-parser.add_argument('--dims', type=str, default='[256,256]', help='the dims for the DNN')
 parser.add_argument('--norm', type=bool, default=False, help='Normalize the input or not')
 parser.add_argument('--emb_size', type=int, default=10, help='timestep embedding size')
 
