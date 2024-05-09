@@ -7,8 +7,8 @@ import math
 class CAM_AE(nn.Module):
     """
     CAM-AE: The neural network architecture for learning the data distribution in the reverse diffusion process.
+    First-hop neighbors (direct neighbors) are to be integrated.
     """
-
     def __init__(self, d_model, num_heads, num_layers, in_dims, emb_size, time_type="cat", norm=False, dropout=0.5):
         super(CAM_AE, self).__init__()
         self.in_dims = in_dims
@@ -23,11 +23,8 @@ class CAM_AE(nn.Module):
                                         for d_in, d_out in zip([d_model,d_model], [d_model,d_model])])
         self.out_layers = nn.ModuleList([nn.Linear(d_in, d_out) \
                                          for d_in, d_out in zip([d_model,d_model], [d_model,d_model])])
-
-
         self.forward_layers = nn.ModuleList([nn.Linear(d_model, d_model) \
                                          for i in range(num_layers)])
-
         self.dim_inters = 650
         self.first_hop_embedding = nn.Linear(1, d_model) # Expend dimension
         self.first_hop_decoding = nn.Linear(d_model, 1)
@@ -52,7 +49,6 @@ class CAM_AE(nn.Module):
         self.d_model = d_model
         self.norm1 = nn.LayerNorm(d_model)
         self.norm2 = nn.LayerNorm(d_model)
-
 
     def forward(self, x, x_sec_hop, timesteps):
 
@@ -91,11 +87,9 @@ class CAM_AE(nn.Module):
         h = self.first_hop_decoding(h)
         h = torch.squeeze(h)
         h = torch.tanh(h)
-
         h = self.decoder(h)
 
         return h
-
 
 def timestep_embedding(timesteps, dim, max_period=10000):
     """
@@ -107,7 +101,6 @@ def timestep_embedding(timesteps, dim, max_period=10000):
     :param max_period: controls the minimum frequency of the embeddings.
     :return: an [N x dim] Tensor of positional embeddings.
     """
-
     half = dim // 2
     freqs = torch.exp(
         -math.log(max_period) * torch.arange(start=0, end=half, dtype=torch.float32) / half

@@ -4,7 +4,7 @@ This is the pytorch implementation of our paper at SIGIR 2024:
 > 
 > Hou, Yu and Park, Jin-Duk and Shin, Won-Yong
 
-The implementation of diffusion model part is referred to [DiffRec](https://github.com/YiyanXu/DiffRec/tree/main). Thank you for this contribution.
+The implementation of diffusion model and evaluation parts are referred to [DiffRec](https://github.com/YiyanXu/DiffRec/tree/main). Thank you for this contribution.
 ## Environment
 - Anaconda 3
 - python 3.8.17
@@ -14,12 +14,12 @@ The implementation of diffusion model part is referred to [DiffRec](https://gith
 
 ## Usage
 ### Data
-The user-item interaction data is in './datasets' folder. The file of sec_hop_inters_ML_1M.pt contains the information of second-hop user-item interactions.
+The user-item interactions, train/valid/test, are in './datasets' folder. "sec_hop_inters_ML_1M.pt" contains the information of second-hop user-item interactions and "multi_hop_inters_ML_1M.pt" contains multi-hop user-item interactions.
 
 ### Training
 #### CF-Diff
 ```
-cd ./CF-Diff
+cd ./CF_Diff
 python main.py
 ```
 

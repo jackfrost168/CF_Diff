@@ -2,6 +2,7 @@ import numpy as np
 import scipy.sparse as sp
 from torch.utils.data import Dataset
 
+
 def data_load(train_path, valid_path, test_path):
     train_list = np.load(train_path, allow_pickle=True)
     valid_list = np.load(valid_path, allow_pickle=True)

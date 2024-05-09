@@ -2,12 +2,10 @@ import argparse
 import os
 import time
 import numpy as np
-
 import torch
 import torch.optim as optim
 from torch.utils.data import DataLoader
 import torch.backends.cudnn as cudnn
-
 import models.gaussian_diffusion as gd
 
 from models.CAM_AE import CAM_AE
@@ -204,6 +202,7 @@ if __name__ == '__main__':
         print("Runing Epoch {:03d} ".format(epoch) + 'train loss {:.4f}'.format(total_loss) + " costs " + time.strftime(
             "%H: %M: %S", time.gmtime(time.time() - start_time)))
         print('---' * 18)
+        
 
     print('===' * 18)
     print("End. Best Epoch {:03d} ".format(best_epoch))
