@@ -15,7 +15,7 @@ The implementation of diffusion model and evaluation parts are referred to [Diff
 ## Usage
 ### Data
 The user-item interactions, train/valid/test, are in './datasets' folder. "sec_hop_inters_ML_1M.pt" contains the information of second-hop user-item interactions and "multi_hop_inters_ML_1M.pt" contains multi-hop user-item interactions.
-More data about "high-order interactions" can be found [here](https://drive.google.com/drive/folders/1CJdlsNuDnLiiyh4iN1eRBGRAKZ3GfxZn?usp=drive_link). "saved_models" can be found [here](https://drive.google.com/drive/folders/1CJdlsNuDnLiiyh4iN1eRBGRAKZ3GfxZn?usp=drive_link).
+More data about "high-order interactions" can be found [here](https://drive.google.com/drive/folders/1CJdlsNuDnLiiyh4iN1eRBGRAKZ3GfxZn?usp=drive_link). More "saved_models" can be found [here](https://drive.google.com/drive/folders/1CJdlsNuDnLiiyh4iN1eRBGRAKZ3GfxZn?usp=drive_link).
 ### Training
 #### CF-Diff
 ```
